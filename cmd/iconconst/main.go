@@ -1,8 +1,12 @@
-// Command iconconst generates Go constants for all *.svg icons in a directory.
+// Command iconconst generates one Go variable per *.svg icon in a directory.
+// The variables use a struct type declared in the target package, typically
+// unexported, so callers can only pass icons that actually exist:
+//
+//	type icon struct{ name string }
 //
 // Typical use in an icon package:
 //
-//	//go:generate go run github.com/timzifer/fyne_iconkit/cmd/iconconst -dir icons -prefix Icon -out icons_gen.go
+//	//go:generate go run github.com/timzifer/fyne_iconkit/cmd/iconconst -dir icons -type icon -prefix Icon -out icons_gen.go
 //
 // The package name defaults to $GOPACKAGE, which go generate sets.
 package main
@@ -22,6 +26,7 @@ func main() {
 		dir    = flag.String("dir", "icons", "directory containing the *.svg files")
 		out    = flag.String("out", "icons_gen.go", "output file")
 		pkg    = flag.String("pkg", os.Getenv("GOPACKAGE"), "package name (default $GOPACKAGE)")
+		typ    = flag.String("type", "icon", "struct type of the generated variables")
 		prefix = flag.String("prefix", "Icon", "identifier prefix")
 		upper  = flag.Bool("upper", false, `upper-case identifiers joined by "_" (e.g. FlagGB_ENG)`)
 	)
@@ -29,6 +34,7 @@ func main() {
 
 	cfg := constgen.Config{
 		Package: *pkg,
+		Type:    *typ,
 		Dir:     filepath.ToSlash(filepath.Clean(*dir)),
 		Prefix:  *prefix,
 		Command: "iconconst " + strings.Join(os.Args[1:], " "),

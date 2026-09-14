@@ -41,7 +41,7 @@ func TestGenerate(t *testing.T) {
 		"icons/a.svg":      {},
 		"icons/notes.txt":  {},
 	}
-	src, err := Generate(fsys, Config{Package: "fyne_test", Dir: "icons", Prefix: "Icon", Command: "iconconst -dir icons"})
+	src, err := Generate(fsys, Config{Package: "fyne_test", Type: "icon", Dir: "icons", Prefix: "Icon", Command: "iconconst -dir icons"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,10 +49,10 @@ func TestGenerate(t *testing.T) {
 
 package fyne_test
 
-// Names of all 2 icons in this package.
-const (
-	IconA     = "a"
-	IconBIcon = "b-icon"
+// All 2 icons of this package.
+var (
+	IconA     = icon{"a"}
+	IconBIcon = icon{"b-icon"}
 )
 `
 	if string(src) != want {
@@ -66,11 +66,12 @@ func TestGenerateErrors(t *testing.T) {
 		cfg  Config
 		want string
 	}{
-		"collision":   {fstest.MapFS{"i/a-b.svg": {}, "i/a_b.svg": {}}, Config{Package: "p", Dir: "i", Prefix: "I"}, "both map to"},
-		"empty dir":   {fstest.MapFS{"i/x.txt": {}}, Config{Package: "p", Dir: "i", Prefix: "I"}, "no *.svg"},
-		"missing dir": {fstest.MapFS{}, Config{Package: "p", Dir: "i", Prefix: "I"}, "i"},
-		"bad package": {fstest.MapFS{"i/a.svg": {}}, Config{Package: "", Dir: "i", Prefix: "I"}, "package"},
-		"bad ident":   {fstest.MapFS{"i/1.svg": {}}, Config{Package: "p", Dir: "i"}, "prefix"},
+		"collision":   {fstest.MapFS{"i/a-b.svg": {}, "i/a_b.svg": {}}, Config{Package: "p", Type: "t", Dir: "i", Prefix: "I"}, "both map to"},
+		"empty dir":   {fstest.MapFS{"i/x.txt": {}}, Config{Package: "p", Type: "t", Dir: "i", Prefix: "I"}, "no *.svg"},
+		"missing dir": {fstest.MapFS{}, Config{Package: "p", Type: "t", Dir: "i", Prefix: "I"}, "i"},
+		"bad package": {fstest.MapFS{"i/a.svg": {}}, Config{Package: "", Type: "t", Dir: "i", Prefix: "I"}, "package"},
+		"bad type":    {fstest.MapFS{"i/a.svg": {}}, Config{Package: "p", Dir: "i", Prefix: "I"}, "type"},
+		"bad ident":   {fstest.MapFS{"i/1.svg": {}}, Config{Package: "p", Type: "t", Dir: "i"}, "prefix"},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {

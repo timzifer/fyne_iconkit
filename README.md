@@ -24,7 +24,11 @@ import (
 	"github.com/timzifer/fyne_iconkit"
 )
 
-//go:generate go run github.com/timzifer/fyne_iconkit/cmd/iconconst -dir icons -prefix Icon -out icons_gen.go
+//go:generate go run github.com/timzifer/fyne_iconkit/cmd/iconconst -dir icons -type icon -prefix Icon -out icons_gen.go
+
+// icon is unexported and only created by the generated variables (IconHome, ...)
+// or Lookup, so callers cannot pass names that do not exist.
+type icon struct{ name string }
 
 //go:embed icons
 var icons embed.FS
@@ -33,12 +37,20 @@ var icons embed.FS
 // NewSet for multi-colored icons that are served as they are.
 var set = fyne_iconkit.NewStainableSet(icons, "icons")
 
-func MustIcon(name string, stain ...color.Color) fyne.Resource {
-	return set.MustIcon(name, stain...)
+func Icon(i icon, stain ...color.Color) fyne.Resource {
+	return set.MustIcon(i.name, stain...)
+}
+
+func Lookup(name string) (icon, bool) {
+	if !set.Has(name) {
+		return icon{}, false
+	}
+	return icon{name}, true
 }
 ```
 
-A `Set` offers:
+A `Set` is addressed by plain names; wrapping packages hide that behind their
+icon type. It offers:
 
 | Method | Description |
 |---|---|
@@ -50,15 +62,19 @@ A `Set` offers:
 
 Unknown icons yield errors wrapping `fs.ErrNotExist`.
 
-## Name constants
+## Generated icon variables
 
-`cmd/iconconst` writes one constant per `*.svg` file:
+`cmd/iconconst` writes one variable per `*.svg` file, e.g.
+`IconArrowUp = icon{"arrow-up"}`. Struct values are used instead of string
+constants because an untyped string literal would still be accepted wherever a
+string-based type is expected.
 
 | Flag | Default | |
 |---|---|---|
 | `-dir` | `icons` | directory with the SVG files |
 | `-out` | `icons_gen.go` | output file |
 | `-pkg` | `$GOPACKAGE` | package name |
+| `-type` | `icon` | struct type with a single string field, declared in the package |
 | `-prefix` | `Icon` | identifier prefix |
 | `-upper` | `false` | `gb-eng` → `FlagGB_ENG` instead of `FlagGbEng` |
 
