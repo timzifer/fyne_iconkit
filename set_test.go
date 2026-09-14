@@ -49,13 +49,13 @@ func TestNames(t *testing.T) {
 func TestSource(t *testing.T) {
 	s := NewStainableSet(testFS, "icons")
 
-	for _, name := range []string{"square", "square.svg"} {
+	for _, name := range []string{"square"} {
 		src, err := s.Source(name)
 		if err != nil || string(src) != monoSVG {
 			t.Errorf("Source(%q) = %q, %v", name, src, err)
 		}
 	}
-	for _, name := range []string{"", "missing", "../secret/secret", `..\secret\secret`, "sub/x", ".", ".."} {
+	for _, name := range []string{"", "missing", "square.svg", "../secret/secret", `..\secret\secret`, "sub/x", ".", ".."} {
 		if _, err := s.Source(name); !errors.Is(err, fs.ErrNotExist) {
 			t.Errorf("Source(%q) error = %v, want fs.ErrNotExist", name, err)
 		}
@@ -94,7 +94,7 @@ func TestIconStatic(t *testing.T) {
 	if _, ok := res.(StainableResource); ok {
 		t.Error("static icon must not be stainable")
 	}
-	if again, _ := s.Icon("xx.svg"); again != res {
+	if again, _ := s.Icon("xx"); again != res {
 		t.Error("Icon() is not cached")
 	}
 }

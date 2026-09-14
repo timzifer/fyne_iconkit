@@ -69,11 +69,10 @@ func (s *Set) Has(name string) bool {
 	return err == nil
 }
 
-// Source returns the unmodified SVG content of the named icon. The name may
-// carry an optional ".svg" suffix. Unknown names yield an error wrapping
+// Source returns the unmodified SVG content of the named icon. Names are the
+// file names without ".svg". Unknown names yield an error wrapping
 // fs.ErrNotExist.
 func (s *Set) Source(name string) ([]byte, error) {
-	name = strings.TrimSuffix(name, svgExt)
 	if name == "" || strings.ContainsAny(name, `/\`) || name == "." || name == ".." {
 		return nil, fmt.Errorf("icon %q: %w", name, fs.ErrNotExist)
 	}
@@ -100,7 +99,6 @@ func (s *Set) StainedSource(name string, c color.Color) ([]byte, error) {
 // stain color, or with the current theme foreground color if none is given.
 // For other sets stain colors are ignored.
 func (s *Set) Icon(name string, stainColor ...color.Color) (fyne.Resource, error) {
-	name = strings.TrimSuffix(name, svgExt)
 	if !s.stainable {
 		return s.load(name, name, func(src []byte) fyne.Resource {
 			return fyne.NewStaticResource(name+svgExt, src)
