@@ -78,6 +78,38 @@ string-based type is expected.
 | `-prefix` | `Icon` | identifier prefix |
 | `-upper` | `false` | `gb-eng` → `FlagGB_ENG` instead of `FlagGbEng` |
 
+## Importing icon set releases
+
+Package `iconupdate` imports releases of an icon set published on npm. An
+icon package describes its source in a small command and runs it with
+`go generate` before `iconconst`:
+
+```go
+// internal/tablerupdate/main.go
+func main() {
+	iconupdate.Main(iconupdate.Source{
+		Name:    "Tabler Icons",
+		URL:     "https://tabler.io/icons",
+		Package: "@tabler/icons",
+		Dirs:    map[string]string{"package/icons/outline/": "", "package/icons/filled/": "-filled"},
+		License: "package/LICENSE",
+		Aliases: fetchAliases, // renames published by the icon set
+		// ... file names, version constant, Go package
+	})
+}
+```
+
+Each run downloads a release (integrity-checked), replaces the SVGs and the
+license, and keeps renamed icons as `// Deprecated:` aliases until the next
+major release of the icon set. Renames come from the icon set's own alias
+data, from names (`cart-x` → `shopping-cart-x`), from identical looks and from
+manual hints in the state file. Path data that oksvg cannot parse (compact arc
+flags) is normalized. Every release adds a section to `CHANGELOG.md` listing
+renamed, removed, added and visibly changed icons; `-release-notes` extracts
+it for GitHub releases. See
+[fyne_tabler](https://github.com/timzifer/fyne_tabler) and
+[fyne_lucide](https://github.com/timzifer/fyne_lucide).
+
 ## License
 
 [MIT](LICENSE)
