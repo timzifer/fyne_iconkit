@@ -28,14 +28,15 @@ type Set struct {
 	dir       string
 	stainable bool
 
-	mu    sync.Mutex
-	cache map[string]fyne.Resource
+	mu       sync.Mutex
+	cache    map[string]fyne.Resource
+	outlines map[string][]byte
 }
 
 // NewSet returns a Set of multi-colored icons (e.g. flags). Icons are served
 // as they are; stain colors passed to Icon are ignored.
 func NewSet(fsys fs.FS, dir string) *Set {
-	return &Set{fsys: fsys, dir: dir, cache: map[string]fyne.Resource{}}
+	return &Set{fsys: fsys, dir: dir, cache: map[string]fyne.Resource{}, outlines: map[string][]byte{}}
 }
 
 // NewStainableSet returns a Set of monochrome icons that use "currentColor".
@@ -97,6 +98,8 @@ func (s *Set) StainedSource(name string, c color.Color) ([]byte, error) {
 //
 // For stainable sets the result is a StainableResource colored with the first
 // stain color, or with the current theme foreground color if none is given.
+// Its content is the Outline of the icon, so Fyne can recolor it (e.g. in
+// disabled buttons or theme.NewThemedResource) and scales its strokes.
 // For other sets stain colors are ignored.
 func (s *Set) Icon(name string, stainColor ...color.Color) (fyne.Resource, error) {
 	if !s.stainable {
@@ -112,8 +115,23 @@ func (s *Set) Icon(name string, stainColor ...color.Color) (fyne.Resource, error
 		c = foregroundColor()
 	}
 	return s.load(name, cacheKey(name, c), func(src []byte) fyne.Resource {
-		return &stainedResource{set: s, name: name, color: c, content: Stain(src, c)}
+		return &stainedResource{set: s, name: name, color: c, content: Stain(s.outline(name, src), c)}
 	})
+}
+
+// outline returns the cached Outline of the named icon, or src if it cannot
+// be outlined. s.mu must be held.
+func (s *Set) outline(name string, src []byte) []byte {
+	if out, ok := s.outlines[name]; ok {
+		return out
+	}
+	out, err := Outline(src)
+	if err != nil {
+		fyne.LogError(fmt.Sprintf("could not outline icon %q, using it as is", name), err)
+		out = src
+	}
+	s.outlines[name] = out
+	return out
 }
 
 // MustIcon is like Icon but logs the error via fyne.LogError and returns

@@ -192,7 +192,9 @@ const (
 	// An icon looks different if more than this share of pixels differs
 	// clearly in coverage. Calibrated on Lucide 0.93 → 1.74 renames: up to
 	// about 4% are stroke and corner tweaks, from about 6% on the icon shows
-	// visibly different details.
+	// visibly different details. Rechecked with strokes scaled to the render
+	// size on Tabler 2.30 → 3.52 and Lucide: icons from 5.1% on show
+	// redesigned details (other digits, moved parts, new eyes).
 	maxDifferentPixels = 0.05
 	clearDifference    = 0x60
 )

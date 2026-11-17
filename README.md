@@ -62,6 +62,22 @@ icon type. It offers:
 
 Unknown icons yield errors wrapping `fs.ErrNotExist`.
 
+### Stroked icons and Fyne's recoloring
+
+Fyne recolors SVG icons by replacing their fill colors, e.g. in disabled
+buttons and menu items, important buttons, selected tabs and
+`theme.NewThemedResource`/`NewColoredResource`/`NewDisabledResource`. Stroked
+icons like Tabler or Lucide do not survive that: strokes lose their attributes
+and `<line>`/`<polyline>` elements are dropped, so icons turn into blobs or
+vanish. Fyne also draws strokes with a fixed width regardless of the icon size.
+
+`Icon` therefore serves stainable icons as `Outline`: strokes are converted
+into filled shapes once per icon (about 1 ms, then cached). Outlined icons are
+recolored correctly and scale like Fyne's own icons; only the opacity of
+translucent parts is lost when Fyne recolors them. `Source` and
+`StainedSource` still return the original SVG, and `PNG` scales strokes with
+the requested size.
+
 ## Generated icon variables
 
 `cmd/iconconst` writes one variable per `*.svg` file, e.g.

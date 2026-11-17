@@ -28,8 +28,8 @@ func TestShape(t *testing.T) {
 		t.Error("different path counts as same shape")
 	}
 
-	polyline := []byte(`<svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><polyline points="4 4 20 20"/></svg>`)
-	path := []byte(`<svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M4 4L20 20"/></svg>`)
+	polyline := []byte(`<svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><polyline points="4 4 20 20 20 4"/></svg>`)
+	path := []byte(`<svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M4 4L20 20L20 4"/></svg>`)
 	other := []byte(`<svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M4 20L20 4"/></svg>`)
 	if !sameShape(polyline, path) {
 		t.Error("the same line as polyline and path counts as changed")
