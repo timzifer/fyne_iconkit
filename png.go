@@ -7,8 +7,9 @@ import (
 	"image"
 	"image/color"
 	"image/png"
+	"math"
 
-	"github.com/srwiley/oksvg"
+	"github.com/fyne-io/oksvg"
 	"github.com/srwiley/rasterx"
 )
 
@@ -61,7 +62,7 @@ func rasterize(src []byte, size int) (img *image.NRGBA, err error) {
 		w = max(1, int(float64(size)*vb.W/vb.H+0.5))
 	}
 
-	icon.SetTarget(0, 0, float64(w), float64(h))
+	setTarget(icon, float64(w), float64(h))
 	img = image.NewNRGBA(image.Rect(0, 0, w, h))
 	scanner := rasterx.NewScannerGV(w, h, img, img.Bounds())
 
@@ -72,4 +73,22 @@ func rasterize(src []byte, size int) (img *image.NRGBA, err error) {
 	}()
 	icon.Draw(rasterx.NewDasher(w, h, scanner), 1)
 	return img, nil
+}
+
+// setTarget makes icon draw its view box into a w×h rectangle at the origin.
+// Unlike icon.SetTarget it also scales stroke widths and dashes, which oksvg
+// leaves in target pixels.
+func setTarget(icon *oksvg.SvgIcon, w, h float64) {
+	icon.SetTarget(0, 0, w, h)
+	scale := math.Sqrt(w / icon.ViewBox.W * h / icon.ViewBox.H)
+	for i := range icon.SVGPaths {
+		p := &icon.SVGPaths[i]
+		p.LineWidth *= scale
+		p.DashOffset *= scale
+		dash := make([]float64, len(p.Dash))
+		for n, d := range p.Dash {
+			dash[n] = d * scale
+		}
+		p.Dash = dash
+	}
 }
